@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+.logs/
+playwright-report/
+test-results/
+.toolchain/
+.freebuff/
+*.local
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example

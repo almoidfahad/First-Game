@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Shadow City">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#0d2237"/>
+      <stop offset="100%" stop-color="#04060b"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0f9ff"/>
+      <stop offset="70%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <circle cx="32" cy="31" r="21" fill="none" stroke="#38bdf8" stroke-opacity="0.55" stroke-width="1.6"/>
+  <circle cx="27" cy="24" r="10" fill="url(#moon)"/>
+  <circle cx="32.5" cy="21" r="8.4" fill="#04070d"/>
+  <path d="M8 54h8v-6h7v-9h6v12h6v-7h8v4h5v-9h6v15H8z" fill="#050b14" stroke="#1e3a5f" stroke-width="0.7"/>
+  <circle cx="24" cy="46" r="1" fill="#7dd3fc"/>
+  <circle cx="41" cy="43" r="1" fill="#7dd3fc"/>
+</svg>
