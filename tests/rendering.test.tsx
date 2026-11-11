@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import MainMenu from '../src/pages/MainMenu'
 import NewGame from '../src/pages/NewGame'
+import { LocationPanel } from '../src/components/LocationPanel'
+import { createGame } from '../src/engine/game'
 import { useGameStore } from '../src/store/useGameStore'
 
 beforeEach(() => {
@@ -45,5 +47,27 @@ describe('interface wiring', () => {
     expect(state?.round).toBe(1)
     expect(state?.players).toHaveLength(1)
     expect(useGameStore.getState().screen).toBe('board')
+  })
+
+  it('enters real-time exploration from an unlocked location without spending AP', async () => {
+    const user = userEvent.setup()
+    const state = createGame({
+      mode: 'solo',
+      difficulty: 'normal',
+      players: 1,
+      scenarioId: 'conspiracy',
+      characterIds: ['detective'],
+      seed: 'exploration-ui-test',
+    })
+    useGameStore.setState({ state, screen: 'board' })
+    render(<LocationPanel locationId="hospital" />)
+
+    await user.click(screen.getByRole('button', { name: /enter real-time exploration/i }))
+
+    const next = useGameStore.getState().state
+    expect(useGameStore.getState().screen).toBe('exploration')
+    expect(next?.exploration.locationId).toBe('hospital')
+    expect(next?.exploration.position).toEqual({ x: 0.5, y: 0.82 })
+    expect(next?.ap).toBe(state.ap)
   })
 })

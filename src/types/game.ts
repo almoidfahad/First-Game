@@ -195,10 +195,34 @@ export interface Player {
   inventory: Record<string, number>
 }
 
-/** Persisted exploration data. It remains idle until a later phase adds scenes and movement. */
+export interface ExplorationPosition {
+  /** Normalized Canvas coordinates in the 0–1 range. */
+  x: number
+  y: number
+}
+
+export type ExplorationFacing = 'up' | 'down' | 'left' | 'right'
+
+export interface ExplorationInput {
+  up: boolean
+  down: boolean
+  left: boolean
+  right: boolean
+  run: boolean
+}
+
+export interface ExplorationMotionState {
+  position: ExplorationPosition
+  stamina: number
+  facing: ExplorationFacing
+  moving: boolean
+  running: boolean
+}
+
+/** Persisted state shared by the strategic map and real-time exploration scene. */
 export interface ExplorationState {
   locationId: LocationId | null
-  position: { x: number; y: number } | null
+  position: ExplorationPosition | null
   staminaByCharacter: Partial<Record<CharacterId, number>>
 }
 
@@ -330,6 +354,7 @@ export type ScreenId =
   | 'menu'
   | 'new-game'
   | 'board'
+  | 'exploration'
   | 'dashboard'
   | 'story'
   | 'ending'

@@ -7,6 +7,7 @@ import { Icon, NeonButton, Panel } from './ui'
 
 const TABS: { id: ScreenId; label: string; icon: string; short: string }[] = [
   { id: 'board', label: 'City Board', icon: 'Map', short: 'City' },
+  { id: 'exploration', label: 'Free Roam', icon: 'Compass', short: 'Roam' },
   { id: 'dashboard', label: 'Survivors', icon: 'Users', short: 'Team' },
   { id: 'story', label: 'Story & Mystery', icon: 'FileText', short: 'Story' },
 ]
@@ -14,6 +15,7 @@ const TABS: { id: ScreenId; label: string; icon: string; short: string }[] = [
 export function GameShell({ active, children }: { active: ScreenId; children: ReactNode }) {
   const state = useGameStore((store) => store.state)
   const navigate = useGameStore((store) => store.navigate)
+  const openExploration = useGameStore((store) => store.openExploration)
 
   if (!state) {
     return (
@@ -51,7 +53,15 @@ export function GameShell({ active, children }: { active: ScreenId; children: Re
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => navigate(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'exploration') {
+                    const locationId = state.exploration.locationId
+                      ?? (state.selectedLocation && state.unlocked.includes(state.selectedLocation)
+                        ? state.selectedLocation
+                        : state.unlocked[0])
+                    if (locationId) openExploration(locationId)
+                  } else navigate(tab.id)
+                }}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative flex flex-1 items-center justify-center gap-2 border-b-2 px-2 py-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] transition sm:flex-none sm:px-5 ${
                   isActive

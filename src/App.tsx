@@ -6,6 +6,7 @@ import { Icon } from './components/ui'
 import CardLibrary from './pages/CardLibrary'
 import Dashboard from './pages/Dashboard'
 import Ending from './pages/Ending'
+import Exploration from './pages/Exploration'
 import GameBoard from './pages/GameBoard'
 import MainMenu from './pages/MainMenu'
 import NewGame from './pages/NewGame'
@@ -22,6 +23,7 @@ const SCREENS: Record<ScreenId, () => ReactElement> = {
   menu: MainMenu,
   'new-game': NewGame,
   board: GameBoard,
+  exploration: Exploration,
   dashboard: Dashboard,
   story: Story,
   ending: Ending,

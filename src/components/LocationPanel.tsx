@@ -12,6 +12,7 @@ const TRADEABLE: ResourceKey[] = ['food', 'water', 'energy']
 export function LocationPanel({ locationId }: { locationId: LocationId }) {
   const state = useGameStore((store) => store.state)
   const act = useGameStore((store) => store.act)
+  const openExploration = useGameStore((store) => store.openExploration)
   const endPlayerTurn = useGameStore((store) => store.endPlayerTurn)
   const [helpResource, setHelpResource] = useState<'food' | 'water'>('food')
   const [tradeFrom, setTradeFrom] = useState<ResourceKey>('food')
@@ -58,6 +59,17 @@ export function LocationPanel({ locationId }: { locationId: LocationId }) {
           <Icon name="Sparkles" size={14} className="mt-0.5 shrink-0" />
           {location.unique}
         </p>
+
+        {!locked && (
+          <NeonButton
+            variant="primary"
+            full
+            icon="Play"
+            onClick={() => openExploration(locationId)}
+          >
+            Enter real-time exploration · free
+          </NeonButton>
+        )}
 
         <div className="grid grid-cols-3 gap-1" aria-label={`Integrity ${integrity} of 3`}>
           {[0, 1, 2].map((index) => (

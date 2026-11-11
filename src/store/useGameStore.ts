@@ -29,6 +29,7 @@ import {
   importSaveFile,
 } from '../services/saves'
 import { audio } from '../services/audio'
+import { EXPLORATION_START_POSITION, MAX_EXPLORATION_STAMINA } from '../engine/exploration'
 
 interface Toast {
   id: number
@@ -57,6 +58,8 @@ interface GameStore {
   endPlayerTurn: () => void
   useItemOn: (itemId: string) => void
   selectLocation: (locationId: LocationId | null) => void
+  openExploration: (locationId: LocationId) => void
+  saveExplorationSnapshot: (position: { x: number; y: number }, stamina: number) => void
   saveToSlot: (slotId: string, name: string) => Promise<void>
   removeSlot: (slotId: string) => Promise<void>
   refreshSaves: () => Promise<void>
@@ -210,6 +213,56 @@ export const useGameStore = create<GameStore>()((set, get) => {
       if (!state) return
       const next = setSelectedLocation(state, locationId)
       set({ state: next })
+    },
+
+    openExploration: (locationId) => {
+      const state = get().state
+      if (!state) return
+      if (!state.unlocked.includes(locationId)) {
+        get().toastMessage('That location is still locked.', 'bad')
+        return
+      }
+      const sameLocation = state.exploration.locationId === locationId
+      const characterId = state.players[state.activePlayer]?.characterId
+      const next: GameState = {
+        ...state,
+        selectedLocation: locationId,
+        exploration: {
+          locationId,
+          position: sameLocation && state.exploration.position
+            ? state.exploration.position
+            : EXPLORATION_START_POSITION,
+          staminaByCharacter: {
+            ...state.exploration.staminaByCharacter,
+            ...(characterId
+              ? { [characterId]: state.exploration.staminaByCharacter[characterId] ?? MAX_EXPLORATION_STAMINA }
+              : {}),
+          },
+        },
+      }
+      commit(next)
+      set({ screen: 'exploration' })
+      audio.play('confirm')
+    },
+
+    saveExplorationSnapshot: (position, stamina) => {
+      const state = get().state
+      const characterId = state?.players[state.activePlayer]?.characterId
+      if (!state || !characterId) return
+      commit({
+        ...state,
+        exploration: {
+          ...state.exploration,
+          position: {
+            x: Math.max(0, Math.min(1, position.x)),
+            y: Math.max(0, Math.min(1, position.y)),
+          },
+          staminaByCharacter: {
+            ...state.exploration.staminaByCharacter,
+            [characterId]: Math.max(0, Math.min(MAX_EXPLORATION_STAMINA, stamina)),
+          },
+        },
+      })
     },
 
     saveToSlot: async (slotId, name) => {

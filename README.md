@@ -12,11 +12,12 @@ Built with React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, Zustand, Dex
 
 | Area | What is implemented |
 | --- | --- |
-| Screens | Main Menu, New Campaign, Interactive City Board, Survivor Dashboard, Story & Decision, Ending & Report, Card Library, Save Slots, Rules, Settings |
+| Screens | Main Menu, New Campaign, Interactive City Board, Real-time Exploration, Survivor Dashboard, Story & Decision, Ending & Report, Card Library, Save Slots, Rules, Settings |
 | Campaign | 8 rounds × 5 phases (Event → Decision → Action → Mystery → Survival), 2 Action Points per survivor per round |
 | Content | 8 characters, 12 locations, 4 scenarios, 20 events, 16 decisions, 12 clue cards, 8 secret missions, 12 items |
 | Resources | Food, Water, Energy (city cap 20/20/12) and Trust (cap 10), consumed every survival phase |
 | Characters | Unique ability modifiers that the engine actually applies (gathering, repair cost/gain, investigation, trust, damage reduction, survival healing) |
+| Real-time movement | Canvas 2D city scene, keyboard/touch movement, walk/run animation, building collision and character-specific stamina |
 | Secrets | One hidden mission per character, with progress, rewards and a pass-and-play privacy gate in local multiplayer |
 | Endings | Bright, Broken and Dark, computed from infrastructure, survivors, health, trust, evidence and difficulty threshold |
 | Saves | Autosave after every action + five manual slots, schema versioning, migration, corrupt-save quarantine, JSON export/import |
@@ -30,7 +31,7 @@ Requires **Node.js 20 or newer** and npm.
 
 ```bash
 npm install
-npm run dev        # http://127.0.0.1:5173
+npm run dev        # Open the local URL printed by Vite (usually http://127.0.0.1:5173)
 ```
 
 Production build and local preview:
@@ -46,7 +47,7 @@ The PWA service worker is generated for production builds (`dist/sw.js`); the de
 
 | Script | Purpose |
 | --- | --- |
-| `npm run dev` | Vite dev server on port 5173 |
+| `npm run dev` | Vite dev server starting at port 5173; if busy, Vite selects the next available port and prints its URL |
 | `npm run build` | Type-check, then production build with PWA manifest and service worker |
 | `npm run preview` | Serve the production build on port 4173 |
 | `npm run typecheck` | `tsc --noEmit` (strict, no unused locals) |
@@ -90,13 +91,13 @@ src/
   data/         characters, locations, scenarios and the card pack + validator
   database/     Dexie schema
   engine/       deterministic RNG, effects, actions, phases, endings
-  pages/        the ten screens
+  pages/        the game screens, including real-time exploration
   services/     saves, procedural audio, PWA registration, printable reports
   store/        Zustand game and settings stores
   styles/       Tailwind layers, theme, accessibility modes, print stylesheet
   types/        shared domain model
 tests/
-  unit/         content, engine, saves
+  unit/         content, engine, saves, exploration movement
   rendering.test.tsx
   e2e/          Playwright smoke path
 scripts/        PNG icon generator (no image dependency)
@@ -113,7 +114,7 @@ Portraits, the skyline and the icon set are generated from code (SVG/CSS and a z
 ## Testing
 
 ```bash
-npm test          # 33 tests: content integrity, engine, saves, UI wiring
+npm test          # 45 tests: content integrity, engine, saves, movement and UI wiring
 npm run typecheck
 npm run build
 ```
