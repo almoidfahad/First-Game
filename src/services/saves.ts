@@ -12,6 +12,7 @@ import type {
   ValidationResult,
 } from '../types/game'
 import { db } from '../database/db'
+import { createInitialExplorationState, isExplorationState } from '../engine/exploration'
 
 const PHASES: Phase[] = ['event', 'decision', 'action', 'mystery', 'survival', 'complete']
 const MODES: GameMode[] = ['solo', 'local', 'story']
@@ -50,7 +51,9 @@ export function validateGameState(input: unknown): ValidationResult<GameState> {
 
   const state = input as unknown as GameState
 
-  if (!isFiniteNumber(state.schemaVersion)) errors.push('Missing schema version.')
+  if (!isFiniteNumber(state.schemaVersion) || !Number.isInteger(state.schemaVersion) || state.schemaVersion < 1) {
+    errors.push('Missing or invalid schema version.')
+  }
   else if (state.schemaVersion > SCHEMA_VERSION) errors.push('Save was created by a newer version of the game.')
   if (typeof state.id !== 'string' || state.id.length === 0) errors.push('Missing game id.')
   if (typeof state.seed !== 'string') errors.push('Missing seed.')
@@ -97,6 +100,11 @@ export function validateGameState(input: unknown): ValidationResult<GameState> {
     }
   }
 
+  // V1 saves predate exploration and are upgraded before V2 validation.
+  if (state.schemaVersion >= 2 && !isExplorationState(state.exploration)) {
+    errors.push('Exploration state invalid.')
+  }
+
   if (!isFiniteNumber(state.activePlayer) || state.activePlayer < 0 || state.activePlayer > 3) {
     errors.push('Active player index invalid.')
   }
@@ -121,24 +129,46 @@ export function validateSaveRecord(input: unknown): ValidationResult<SaveRecord>
   const errors: string[] = []
   if (typeof record.id !== 'string' || record.id.length === 0) errors.push('Save id missing.')
   if (typeof record.name !== 'string') errors.push('Save name missing.')
-  if (!isFiniteNumber(record.schemaVersion)) errors.push('Save schema version missing.')
+  if (
+    !isFiniteNumber(record.schemaVersion) ||
+    !Number.isInteger(record.schemaVersion) ||
+    record.schemaVersion < 1
+  ) {
+    errors.push('Save schema version missing or invalid.')
+  }
   const stateResult = validateGameState(record.state)
   if (!stateResult.ok) errors.push(...stateResult.errors)
+  else if (stateResult.value?.schemaVersion !== record.schemaVersion) {
+    errors.push('Save and game state schema versions do not match.')
+  }
   if (errors.length > 0) return { ok: false, errors }
   return { ok: true, value: record, errors: [] }
 }
 
-/** Forward-compatible migration pipeline. Unknown future versions are rejected. */
+/** Forward-compatible migration pipeline. Unknown versions are rejected. */
 export function migrateSave(record: SaveRecord): ValidationResult<SaveRecord> {
+  const initial = validateSaveRecord(record)
+  if (!initial.ok) return initial
   if (record.schemaVersion > SCHEMA_VERSION) {
     return { ok: false, errors: ['This save was created by a newer version of Shadow City.'] }
   }
-  let working = record
-  if (working.schemaVersion < SCHEMA_VERSION) {
-    // v1 is the first schema; future migrations chain here.
-    working = { ...working, schemaVersion: SCHEMA_VERSION, state: { ...working.state, schemaVersion: SCHEMA_VERSION } }
+
+  let working = initial.value as SaveRecord
+  if (working.schemaVersion === 1) {
+    working = {
+      ...working,
+      schemaVersion: 2,
+      state: {
+        ...working.state,
+        schemaVersion: 2,
+        exploration: createInitialExplorationState(),
+      },
+    }
+  } else if (working.schemaVersion !== SCHEMA_VERSION) {
+    return { ok: false, errors: [`Save schema version ${working.schemaVersion} is not supported.`] }
   }
-  return { ok: true, value: working, errors: [] }
+
+  return validateSaveRecord(working)
 }
 
 export function toSummary(record: SaveRecord): SaveSummary {

@@ -1,6 +1,6 @@
 import type { Consumables, Difficulty, LocationId, Phase, ResourceKey, Resources } from '../types/game'
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 export const TOTAL_ROUNDS = 8
 export const AP_PER_ROUND = 2
 export const MAX_HEALTH = 100

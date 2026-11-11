@@ -195,6 +195,13 @@ export interface Player {
   inventory: Record<string, number>
 }
 
+/** Persisted exploration data. It remains idle until a later phase adds scenes and movement. */
+export interface ExplorationState {
+  locationId: LocationId | null
+  position: { x: number; y: number } | null
+  staminaByCharacter: Partial<Record<CharacterId, number>>
+}
+
 export type LogTone = 'info' | 'good' | 'bad' | 'mystery' | 'system'
 
 export interface LogEntry {
@@ -266,6 +273,7 @@ export interface GameState {
   unlocked: LocationId[]
   players: Player[]
   activePlayer: number
+  exploration: ExplorationState
   ap: number
   eventCardId: string | null
   decision: { cardId: string; chosen: string | null; resolved: boolean } | null
@@ -333,6 +341,7 @@ export type ScreenId =
 export type Settings = {
   musicVolume: number
   sfxVolume: number
+  ambientVolume: number
   muted: boolean
   reduceMotion: boolean
   highContrast: boolean

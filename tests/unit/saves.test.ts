@@ -7,6 +7,7 @@ import {
   deleteSave,
   listSaveSummaries,
   manualSlotIds,
+  migrateSave,
   readSave,
   validateGameState,
   writeSave,
@@ -68,6 +69,53 @@ describe('save service', () => {
     await db.saves.put({ ...record, schemaVersion: SCHEMA_VERSION + 5 } as SaveRecord)
     const loaded = await readSave('slot-2')
     expect(loaded.ok).toBe(false)
+  })
+
+  it('loads a V1 save with its gameplay data intact and a default V2 exploration slice', async () => {
+    const state = game()
+    const record = buildRecord('slot-v1', 'Legacy campaign', state)
+    const legacyState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    delete legacyState.exploration
+    legacyState.schemaVersion = 1
+    const legacyRecord = {
+      ...record,
+      schemaVersion: 1,
+      state: legacyState,
+    } as unknown as SaveRecord
+    await db.saves.put(legacyRecord)
+
+    const loaded = await readSave('slot-v1')
+    expect(loaded.ok).toBe(true)
+    expect(loaded.value?.schemaVersion).toBe(2)
+    expect(loaded.value?.state.schemaVersion).toBe(2)
+    expect(loaded.value?.state.exploration).toEqual({
+      locationId: null,
+      position: null,
+      staminaByCharacter: {},
+    })
+    expect(loaded.value?.state).toMatchObject({
+      id: state.id,
+      seed: state.seed,
+      round: state.round,
+      phase: state.phase,
+      resources: state.resources,
+      players: state.players,
+      investigations: state.investigations,
+      clueIds: state.clueIds,
+      log: state.log,
+      eventDeck: state.eventDeck,
+      decisionDeck: state.decisionDeck,
+      stats: state.stats,
+    })
+  })
+
+  it('rejects a V2 save with an invalid exploration slice', () => {
+    const record = buildRecord('slot-bad-exploration', 'Broken exploration', game())
+    const invalid = {
+      ...record,
+      state: { ...record.state, exploration: { locationId: 'unknown', position: null, staminaByCharacter: {} } },
+    } as unknown as SaveRecord
+    expect(migrateSave(invalid).ok).toBe(false)
   })
 
   it('quarantines a corrupt record and reports the failure', async () => {

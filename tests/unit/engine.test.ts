@@ -10,7 +10,7 @@ import {
 import { canPerformAction, performAction } from '../../src/engine/actions'
 import { applyEffectsCopy } from '../../src/engine/effects'
 import { evaluateEnding } from '../../src/engine/ending'
-import { AP_PER_ROUND, MAX_INTEGRITY, RESOURCE_CAPS, TOTAL_ROUNDS } from '../../src/engine/config'
+import { AP_PER_ROUND, MAX_INTEGRITY, RESOURCE_CAPS, SCHEMA_VERSION, TOTAL_ROUNDS } from '../../src/engine/config'
 import { CLUE_MAP, getClueIdsForScenario } from '../../src/data/scenarios'
 import { DECISION_MAP } from '../../src/data/cards/decisions'
 import { LOCATIONS } from '../../src/data/locations'
@@ -57,6 +57,12 @@ function reachAction(game: GameState): GameState {
 }
 
 describe('resources', () => {
+  it('starts new campaigns at the current save schema with an empty exploration slice', () => {
+    const state = makeGame()
+    expect(state.schemaVersion).toBe(SCHEMA_VERSION)
+    expect(state.exploration).toEqual({ locationId: null, position: null, staminaByCharacter: {} })
+  })
+
   it('clamps gains at the cap and losses at zero', () => {
     const base = makeGame()
     const gained = applyEffectsCopy(base, [{ kind: 'resource', resource: 'food', amount: 999 }], {
@@ -166,6 +172,8 @@ describe('actions', () => {
 describe('round phases', () => {
   it('walks event → decision → action → mystery → survival → next round', () => {
     const state = reachAction(makeGame())
+    expect(state.stats.decisionsMade).toBe(1)
+    expect(state.log.some((entry) => entry.text.startsWith('Decision — '))).toBe(true)
     const mystery = advancePhase(state)
     expect(mystery.ok).toBe(true)
     expect(mystery.state.phase).toBe('mystery')
@@ -237,6 +245,7 @@ describe('mystery and unlocks', () => {
     expect(state.clueIds).toEqual(expect.arrayContaining(clues))
     expect(state.unlocked).toContain('lab')
     expect(state.stats.cluesFound).toBe(clues.length)
+    expect(state.log.some((entry) => entry.text.startsWith('Clue discovered — '))).toBe(true)
   })
 
   it('does not leak clues from another scenario', () => {

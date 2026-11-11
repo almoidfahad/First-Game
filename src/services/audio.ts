@@ -9,15 +9,17 @@ type Cue = 'click' | 'confirm' | 'error' | 'card' | 'alert'
 interface AudioState {
   musicVolume: number
   sfxVolume: number
+  ambientVolume: number
   muted: boolean
 }
 
-class AudioEngine {
+export class AudioEngine {
   private ctx: AudioContext | null = null
   private musicGain: GainNode | null = null
   private sfxGain: GainNode | null = null
+  private ambientGain: GainNode | null = null
   private ambient: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode }[] = []
-  private settings: AudioState = { musicVolume: 0.35, sfxVolume: 0.5, muted: false }
+  private settings: AudioState = { musicVolume: 0.35, sfxVolume: 0.5, ambientVolume: 0.35, muted: false }
   private started = false
 
   configure(settings: AudioState): void {
@@ -26,6 +28,7 @@ class AudioEngine {
     const now = this.ctx.currentTime
     this.musicGain?.gain.setTargetAtTime(settings.muted ? 0 : settings.musicVolume * 0.5, now, 0.2)
     this.sfxGain?.gain.setTargetAtTime(settings.muted ? 0 : settings.sfxVolume * 0.6, now, 0.1)
+    this.ambientGain?.gain.setTargetAtTime(settings.muted ? 0 : settings.ambientVolume * 0.5, now, 0.2)
   }
 
   /** Must be called from a user gesture before anything can be heard. */
@@ -50,9 +53,13 @@ class AudioEngine {
       const sfx = ctx.createGain()
       sfx.gain.value = this.settings.muted ? 0 : this.settings.sfxVolume * 0.6
       sfx.connect(master)
+      const ambient = ctx.createGain()
+      ambient.gain.value = this.settings.muted ? 0 : this.settings.ambientVolume * 0.5
+      ambient.connect(master)
       this.ctx = ctx
       this.musicGain = music
       this.sfxGain = sfx
+      this.ambientGain = ambient
       return ctx
     } catch {
       return null
@@ -61,7 +68,7 @@ class AudioEngine {
 
   startAmbient(): void {
     const ctx = this.ensureContext()
-    if (!ctx || !this.musicGain || this.started) return
+    if (!ctx || !this.ambientGain || this.started) return
     this.started = true
     // Two detuned drones and a slow filter LFO: a city breathing in the dark.
     const frequencies = [55, 82.5, 110]
@@ -82,7 +89,7 @@ class AudioEngine {
       lfoGain.connect(filter.frequency)
       osc.connect(filter)
       filter.connect(gain)
-      gain.connect(this.musicGain)
+      gain.connect(this.ambientGain)
       osc.start()
       lfo.start()
       this.ambient.push({ osc, lfo, gain })

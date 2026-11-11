@@ -3,7 +3,14 @@ import { DECISION_CARDS, getDecisionOption } from '../data/cards/decisions'
 import { CHARACTER_MISSION, MISSION_MAP } from '../data/cards/missions'
 import { ITEM_MAP } from '../data/cards/items'
 import { CHARACTER_IDS, getCharacter } from '../data/characters'
-import { DEFAULT_UNLOCKED, DIFFICULTY_SETTINGS, LOCATION_IDS, MAX_HEALTH, TOTAL_ROUNDS } from './config'
+import {
+  DEFAULT_UNLOCKED,
+  DIFFICULTY_SETTINGS,
+  LOCATION_IDS,
+  MAX_HEALTH,
+  SCHEMA_VERSION,
+  TOTAL_ROUNDS,
+} from './config'
 import { LOCATION_MAP } from '../data/locations'
 import { CLUE_MAP, SCENARIOS, getClueIdsForScenario, getScenario } from '../data/scenarios'
 import type {
@@ -24,6 +31,7 @@ import { evaluateEnding } from './ending'
 import { hashSeed, rollInt, shuffleSeeded } from './rng'
 import { AP_PER_ROUND, MAX_INTEGRITY, RESOURCE_CAPS } from './config'
 import { addResource } from './effects'
+import { createInitialExplorationState } from './exploration'
 
 export interface EngineResult {
   ok: boolean
@@ -100,7 +108,7 @@ export function createGame(config: NewGameConfig): GameState {
   const players = chosen.map((characterId, index) => createPlayer(index, characterId))
 
   const state: GameState = {
-    schemaVersion: 1,
+    schemaVersion: SCHEMA_VERSION,
     id: seed,
     seed,
     createdAt: Date.now(),
@@ -115,6 +123,7 @@ export function createGame(config: NewGameConfig): GameState {
     unlocked: [...DEFAULT_UNLOCKED],
     players,
     activePlayer: 0,
+    exploration: createInitialExplorationState(),
     ap: 0,
     eventCardId: null,
     decision: null,

@@ -56,6 +56,12 @@ export default function Settings() {
             format={(value) => `${Math.round(value * 100)}%`}
           />
           <Slider
+            label="Ambient volume"
+            value={settings.ambientVolume}
+            onChange={settings.setAmbientVolume}
+            format={(value) => `${Math.round(value * 100)}%`}
+          />
+          <Slider
             label="Effects volume"
             value={settings.sfxVolume}
             onChange={settings.setSfxVolume}
@@ -63,7 +69,7 @@ export default function Settings() {
           />
           <Toggle
             label="Mute everything"
-            description="Silences music and interface cues."
+            description="Silences music, ambience and interface cues."
             checked={settings.muted}
             onChange={settings.setMuted}
           />

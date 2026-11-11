@@ -69,9 +69,10 @@ export default function App() {
     audio.configure({
       musicVolume: settings.musicVolume,
       sfxVolume: settings.sfxVolume,
+      ambientVolume: settings.ambientVolume,
       muted: settings.muted,
     })
-  }, [settings.musicVolume, settings.sfxVolume, settings.muted])
+  }, [settings.musicVolume, settings.sfxVolume, settings.ambientVolume, settings.muted])
 
   useEffect(() => {
     const unlock = () => {
